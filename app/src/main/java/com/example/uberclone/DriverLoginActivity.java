@@ -53,8 +53,8 @@ private FirebaseAuth.AuthStateListener firebaseAuthListener;
         mRegistration.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String email=mEmail.getText().toString();
-                String password=mPassword.getText().toString();
+                final String email=mEmail.getText().toString();
+                final String password=mPassword.getText().toString();
                 mAuth.createUserWithEmailAndPassword(email,password).addOnCompleteListener(DriverLoginActivity.this,
                         new OnCompleteListener<AuthResult>() {
                             @Override
@@ -64,8 +64,8 @@ private FirebaseAuth.AuthStateListener firebaseAuthListener;
                                    Toast.makeText(DriverLoginActivity.this,"sign up error",Toast.LENGTH_SHORT).show();
                                }else{
                                    String user_id=mAuth.getCurrentUser().getUid();
-                                   DatabaseReference current_usera_db= FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child("user_id");
-                                   current_usera_db.setValue(true);
+                                   DatabaseReference current_usera_db= FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(user_id).child("name");
+                                   current_usera_db.setValue(email);
                                }
                             }
                         });
@@ -74,8 +74,8 @@ private FirebaseAuth.AuthStateListener firebaseAuthListener;
         mLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-               String email=mEmail.getText().toString();
-               String password=mPassword.getText().toString();
+               final String email=mEmail.getText().toString();
+               final String password=mPassword.getText().toString();
                mAuth.signInWithEmailAndPassword(email,password).addOnCompleteListener(DriverLoginActivity.this, new OnCompleteListener<AuthResult>() {
                    @Override
                    public void onComplete(@NonNull Task<AuthResult> task) {
