@@ -35,6 +35,7 @@ public class CustomerLoginActivity extends AppCompatActivity {
         mLogin=findViewById(R.id.login);
         mPassword=findViewById(R.id.password);
         mAuth=FirebaseAuth.getInstance();
+        mRegistration=findViewById(R.id.registration);
 
         firebaseAuthListener=new FirebaseAuth.AuthStateListener() {
             @Override
@@ -42,7 +43,7 @@ public class CustomerLoginActivity extends AppCompatActivity {
                 FirebaseUser user=FirebaseAuth.getInstance().getCurrentUser();
                 if(user!=null){
 
-                    Intent intent=new Intent(CustomerLoginActivity.this,MapActivity.class);
+                    Intent intent=new Intent(CustomerLoginActivity.this,CustomerMapActivity.class);
                     startActivity(intent);
                     finish();
                     return;
@@ -55,8 +56,8 @@ public class CustomerLoginActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-               String email=mEmail.getText().toString();
-               String password=mPassword.getText().toString();
+               final String email=mEmail.getText().toString();
+               final String password=mPassword.getText().toString();
                mAuth.createUserWithEmailAndPassword(email,password).addOnCompleteListener(CustomerLoginActivity.this, new OnCompleteListener<AuthResult>() {
                    @Override
                    public void onComplete(@NonNull Task<AuthResult> task) {
@@ -78,8 +79,8 @@ public class CustomerLoginActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                String email=mEmail.getText().toString();
-                String password=mPassword.getText().toString();
+                final String email=mEmail.getText().toString();
+                final String password=mPassword.getText().toString();
                 mAuth.signInWithEmailAndPassword(email,password).addOnCompleteListener(CustomerLoginActivity.this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
