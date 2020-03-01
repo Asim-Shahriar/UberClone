@@ -2,6 +2,7 @@ package com.example.uberclone;
 
 import androidx.fragment.app.FragmentActivity;
 
+import android.location.Location;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.CompoundButton;
@@ -13,6 +14,9 @@ import android.widget.TextView;
 import com.directions.route.Route;
 import com.directions.route.RouteException;
 import com.directions.route.RoutingListener;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -30,6 +34,9 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     private LinearLayout mCustomerInfo;
     private ImageView mCustomerProfileImage;
     private TextView mCustomerName,mcustomerPhone,mCustomerDestination;
+    Location mLastLocation;
+    LocationRequest mLocationRequest;
+    private FusedLocationProviderClient mFusedLocationClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,6 +57,8 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         mCustomerName=findViewById(R.id.customerName);
         mcustomerPhone=findViewById(R.id.customerPhone);
         mCustomerDestination=findViewById(R.id.customerDestination);
+
+        mFusedLocationClient= LocationServices.getFusedLocationProviderClient(this);
 
         mWorkingSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
