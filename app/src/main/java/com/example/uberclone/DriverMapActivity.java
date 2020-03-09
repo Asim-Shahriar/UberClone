@@ -2,8 +2,10 @@ package com.example.uberclone;
 
 import androidx.fragment.app.FragmentActivity;
 
+import android.content.Intent;
 import android.location.Location;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
@@ -23,6 +25,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.ArrayList;
 
@@ -35,7 +38,10 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     private ImageView mCustomerProfileImage;
     private TextView mCustomerName,mcustomerPhone,mCustomerDestination;
     Location mLastLocation;
+    private int status=0;
+    private Boolean isLoggingOut=false;
     LocationRequest mLocationRequest;
+    private LatLng destinationLatLng,pickupLatLng;
     private FusedLocationProviderClient mFusedLocationClient;
 
     @Override
@@ -70,6 +76,65 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                 }
             }
         });
+
+        mRideStatus.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                switch(status){
+                    case 1:
+                        status=2;
+                        erasePolylines();
+                        if(destinationLatLng.latitude!=0 && destinationLatLng.longitude!=0){
+                            getRouteToMarker(destinationLatLng);
+                        }
+                        mRideStatus.setText("deive completed");
+                        break;
+
+                    case 2:
+                        recordRide();
+                        endRide();
+                        break;
+                }
+            }
+        });
+
+        mLogout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+              isLoggingOut=true;
+              disconnectDriver();
+                FirebaseAuth.getInstance().signOut();
+                Intent intent=new Intent(DriverMapActivity.this,MainActivity.class);
+                startActivity(intent);
+                finish();
+                return;
+            }
+        });
+
+        mSettings.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent=new Intent(DriverMapActivity.this,DriverSettingsActivity.class);
+                startActivity(intent);
+                return;
+            }
+        });
+
+    }
+
+    private void endRide() {
+
+    }
+
+    private void recordRide() {
+
+    }
+
+    private void getRouteToMarker(LatLng destinationLatLng) {
+
+    }
+
+    private void erasePolylines() {
 
     }
 
