@@ -1,5 +1,6 @@
 package com.example.uberclone;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.FragmentActivity;
 
 import android.content.Intent;
@@ -26,6 +27,11 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 
@@ -39,6 +45,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     private TextView mCustomerName,mcustomerPhone,mCustomerDestination;
     Location mLastLocation;
     private int status=0;
+    private String customerId="",destination;
     private Boolean isLoggingOut=false;
     LocationRequest mLocationRequest;
     private LatLng destinationLatLng,pickupLatLng;
@@ -119,6 +126,52 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                 return;
             }
         });
+
+        mHistory.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent=new Intent(DriverMapActivity.this,HistoryActivity.class);
+                intent.putExtra("customerOrDriver","Drivers");
+                startActivity(intent);
+                return;
+            }
+        });
+        getAssignedCustomer();
+    }
+
+    private void getAssignedCustomer() {
+        String driverId=FirebaseAuth.getInstance().getCurrentUser().getUid();
+        DatabaseReference assignedCustomerRef = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(driverId).child("customerRequest");
+        assignedCustomerRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+            if(dataSnapshot.exists()){
+                status=1;
+                customerId=dataSnapshot.getValue().toString();
+                getAssignedCustomerPickupLocation();
+                getAssignedCustomerDestination();
+                getAssignedCustomerInfo();
+            }else{
+                endRide();
+            }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+    private void getAssignedCustomerInfo() {
+
+    }
+
+    private void getAssignedCustomerDestination() {
+
+    }
+
+    private void getAssignedCustomerPickupLocation() {
 
     }
 
