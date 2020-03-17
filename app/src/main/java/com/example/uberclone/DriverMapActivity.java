@@ -14,8 +14,10 @@ import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 
+import com.directions.route.AbstractRouting;
 import com.directions.route.Route;
 import com.directions.route.RouteException;
+import com.directions.route.Routing;
 import com.directions.route.RoutingListener;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationRequest;
@@ -24,6 +26,8 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -35,6 +39,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class DriverMapActivity extends FragmentActivity implements OnMapReadyCallback, RoutingListener {
 
@@ -163,7 +168,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
             }
         });
     }
-    Marker marker;
+    Marker pickupMarker;
     private  DatabaseReference assignedCustomerPickupLocationRef;
     private ValueEventListener assignedCustomerPickupLocationRefListener;
 
@@ -182,8 +187,18 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
              if(dataSnapshot.exists() && !customerId.equals("")){
 
+                 List<Object> map=(List<Object>) dataSnapshot.getValue();
                  double locationLat=0.0;
                  double locationLng=0.0;
+                 if(map.get(0)!=null){
+                     locationLat=Double.parseDouble(map.get(0).toString());
+                 }
+                 if(map.get(1)!=null){
+                     locationLng=Double.parseDouble(map.get(1).toString());
+                 }
+                 pickupLatLng=new LatLng(locationLat,locationLng);
+                 pickupMarker=mMap.addMarker(new MarkerOptions().position(pickupLatLng).title("Pickup location").icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_pickup)));
+                 getRouteToMarker(pickupLatLng);
              }
             }
 
@@ -202,8 +217,16 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
     }
 
-    private void getRouteToMarker(LatLng destinationLatLng) {
-
+    private void getRouteToMarker(LatLng pickupLatLng) {
+         if(pickupLatLng!=null && mLastLocation!=null){
+             Routing routing=new Routing.Builder()
+             .travelMode(AbstractRouting.TravelMode.DRIVING)
+             .withListener(this)
+             .alternativeRoutes(false)
+             .waypoints(new LatLng(mLastLocation.getLatitude(),mLastLocation.getLongitude()),pickupLatLng)
+             .build();
+         routing.execute();
+         }
     }
 
     private void erasePolylines() {
