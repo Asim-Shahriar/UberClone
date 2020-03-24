@@ -40,6 +40,7 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class DriverMapActivity extends FragmentActivity implements OnMapReadyCallback, RoutingListener {
 
@@ -183,7 +184,25 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         assignedCustomerRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+             if(dataSnapshot.exists()){
+                 Map<String,Object> map=(Map<String,Object>) dataSnapshot.getValue();
+                 if(map.get("destination")!=null){
+                     destination=map.get("destination").toString();
+                     mCustomerDestination.setText("Destination" +destination);
+                 }else{
+                     mCustomerDestination.setText("Destination: --");
+                 }
 
+                 Double destinationLat=0.0;
+                 Double destinationLng=0.0;
+                 if(map.get("destinationLat")!=null){
+                     destinationLat=Double.valueOf(map.get("destinationLAt").toString());
+                 }
+                 if(map.get("destinationLng")!=null){
+                     destinationLng=Double.valueOf(map.get("destinationLng").toString());
+                 }
+                 destinationLatLng=new LatLng(destinationLat,destinationLng);
+             }
             }
 
             @Override
