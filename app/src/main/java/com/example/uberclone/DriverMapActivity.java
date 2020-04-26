@@ -1,15 +1,19 @@
 package com.example.uberclone;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import android.Manifest;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Looper;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
@@ -17,6 +21,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.directions.route.AbstractRouting;
@@ -25,8 +30,11 @@ import com.directions.route.RouteException;
 import com.directions.route.Routing;
 import com.directions.route.RoutingListener;
 import com.firebase.geofire.GeoFire;
+import com.firebase.geofire.GeoLocation;
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -344,11 +352,19 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     }
 
     private void connectDriver() {
-
+         checkLocationPermission();
+         mFusedLocationClient.requestLocationUpdates(mLocationRequest,mLocationCallback,Looper.myLooper());
+         mMap.setMyLocationEnabled(true);
     }
 
     private void disconnectDriver() {
-
+     if(mFusedLocationClient!=null){
+         mFusedLocationClient.removeLocationUpdates(mLocationCallback);
+     }
+     String userId=FirebaseAuth.getInstance().getCurrentUser().getUid();
+     DatabaseReference ref=FirebaseDatabase.getInstance().getReference("driversAvailable");
+     GeoFire geoFire=new GeoFire(ref);
+     geoFire.removeLocation(userId);
     }
 
 
@@ -370,8 +386,78 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         }
     }
 
-    private void checkLocationPermission() {
+    LocationCallback mLocationCallback=new LocationCallback(){
+        @Override
+        public void onLocationResult(LocationResult locationResult) {
+            //super.onLocationResult(locationResult);
+            for(Location location:locationResult.getLocations()){
+                if(getApplicationContext()!=null){
 
+                    if(!customerId.equals("") && mLastLocation!=null || location!=null ){
+                        rideDistance+=mLastLocation.distanceTo(location)/1000;
+                    }
+                    mLastLocation=location;
+
+                    LatLng latLng=new LatLng(location.getLatitude(),location.getLongitude());
+                    mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+                    mMap.animateCamera(CameraUpdateFactory.zoomTo(11));
+
+                    String userId=FirebaseAuth.getInstance().getCurrentUser().getUid();
+                    DatabaseReference refAvailable=FirebaseDatabase.getInstance().getReference("driversAvailable");
+                    DatabaseReference refWorking=FirebaseDatabase.getInstance().getReference("driversWorking");
+                    GeoFire geoFireAvailable=new GeoFire(refAvailable);
+                    GeoFire geoFireWorking=new GeoFire(refWorking);
+
+                    switch(customerId){
+                        case "":
+                            geoFireWorking.removeLocation(userId);
+                            geoFireAvailable.setLocation(userId,new GeoLocation(location.getLongitude(),location.getLatitude()));
+                            break;
+                        default:
+                            geoFireAvailable.removeLocation(userId);
+                            geoFireWorking.setLocation(userId, new GeoLocation(location.getLatitude(), location.getLongitude()));
+                            break;
+                    }
+                }
+            }
+        }
+    };
+    private void checkLocationPermission() {
+        if(ContextCompat.checkSelfPermission(this,Manifest.permission.ACCESS_FINE_LOCATION)!=PackageManager.PERMISSION_GRANTED){
+            if(ActivityCompat.shouldShowRequestPermissionRationale(this,Manifest.permission.ACCESS_FINE_LOCATION)){
+                new AlertDialog.Builder(this)
+                        .setTitle("give permission")
+                        .setMessage("give permission message")
+                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                ActivityCompat.requestPermissions(DriverMapActivity.this,new String[]{Manifest.permission.ACCESS_FINE_LOCATION},1);
+                            }
+                        })
+                        .create()
+                        .show();
+            }else{
+                ActivityCompat.requestPermissions(DriverMapActivity.this,new String[]{Manifest.permission.ACCESS_FINE_LOCATION},1);
+            }
+        }
+
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch(requestCode){
+            case 1:
+            if(grantResults.length>0 && grantResults[0]==PackageManager.PERMISSION_GRANTED){
+                if(ContextCompat.checkSelfPermission(this,Manifest.permission.ACCESS_FINE_LOCATION)==PackageManager.PERMISSION_GRANTED){
+                    mFusedLocationClient.requestLocationUpdates(mLocationRequest,mLocationCallback, Looper.myLooper());
+                    mMap.setMyLocationEnabled(true);
+                }
+            }else{
+                Toast.makeText(getApplicationContext(),"Please provide the information",Toast.LENGTH_SHORT).show();
+            }
+            break;
+        }
     }
 
     @Override
