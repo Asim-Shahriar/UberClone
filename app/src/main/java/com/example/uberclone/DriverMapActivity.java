@@ -45,6 +45,8 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -348,7 +350,10 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     }
 
     private void erasePolylines() {
-
+        for(Polyline line : polylines){
+            line.remove();
+        }
+        polylines.clear();
     }
 
     private void connectDriver() {
@@ -460,9 +465,17 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         }
     }
 
+    List<Polyline> polylines;
+    private static final int[] COLORS =new int[]{R.color.primary_dark_material_light};
+
+
     @Override
     public void onRoutingFailure(RouteException e) {
-
+     if(e!=null){
+         Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+     }else{
+         Toast.makeText(this, "Something went wrong, Try again", Toast.LENGTH_SHORT).show();
+     }
     }
 
     @Override
@@ -471,12 +484,28 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     }
 
     @Override
-    public void onRoutingSuccess(ArrayList<Route> arrayList, int i) {
+    public void onRoutingSuccess(ArrayList<Route> route, int shortestRouteIndex) {
+      if(polylines.size()>0){
+          for(Polyline poly:polylines){
+              poly.remove();
+          }
+      }
+      polylines=new ArrayList<>();
+        //add route(s) to the map.
+        for(int i=0;i<route.size();i++){
+            int colorIndex=i%COLORS.length;
+            PolylineOptions polyOptions=new PolylineOptions();
+            polyOptions.color(getResources().getColor(COLORS[colorIndex]));
+            polyOptions.width(10+i*3);
+            polyOptions.addAll(route.get(i).getPoints());
+            Polyline polyline=mMap.addPolyline(polyOptions);
+            polylines.add(polyline);
+            Toast.makeText(getApplicationContext(),"Route "+ (i+1) +": distance - "+ route.get(i).getDistanceValue()+": duration - "+ route.get(i).getDurationValue(),Toast.LENGTH_SHORT).show();
+        }
 
     }
-
     @Override
     public void onRoutingCancelled() {
-
     }
+
 }
